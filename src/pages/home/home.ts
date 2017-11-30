@@ -1,12 +1,13 @@
 //import { Component } from '@angular/core';
 import { Component, ViewChild, ElementRef } from '@angular/core';
 import { NavController } from 'ionic-angular';
+import { AppConfig } from './../../app/app.config';
 
 declare var AMap; //地图声明
 
 @Component({
   selector: 'page-home',
-  templateUrl: 'home.html'
+  templateUrl: './home.html'
 })
 export class HomePage {
   @ViewChild('map_container') map_container: ElementRef;
@@ -26,6 +27,28 @@ export class HomePage {
         showBuildingBlock: true,
         zoomEnable: true
       }),
+    });
+    //加载IP定位插件
+    map.plugin(["AMap.CitySearch"], function () {
+      //实例化城市查询类
+      var citysearch = new AMap.CitySearch();
+      //自动获取用户IP，返回当前城市
+      citysearch.getLocalCity();
+      AMap.event.addListener(citysearch, "complete", function (result) {
+        if (result && result.city && result.bounds) {
+          var cityinfo = result.city;
+          var citybounds = result.bounds;
+          console.log("您当前所在城市：" + cityinfo + "");
+          AppConfig.getCity(cityinfo);
+          //地图显示当前城市
+          map.setBounds(citybounds);
+        }
+        else {
+          console.log("您当前所在城市：" + result.info + "");
+          AppConfig.getCity(result.info);
+        }
+      });
+      AMap.event.addListener(citysearch, "error", function (result) { alert(result.info); });
     });
 
     var infoWindow = new AMap.InfoWindow({
@@ -50,7 +73,7 @@ export class HomePage {
     }
 
     function pinMoving(e) {
-      console.log(map.getCenter());
+      //console.log(map.getCenter());
       marker.setPosition(map.getCenter());
     }
 
@@ -63,9 +86,14 @@ export class HomePage {
     function markerClick(e) {
       infoWindow.setContent(e.target.content);
       infoWindow.open(map, e.target.getPosition());
-      map.zoomIn();
     }
+  }
 
+  onClick1() {
+    console.log("Repo:" + AppConfig.getAppInfo("这是全局储存的信息"));
+  }
+  onClick2() {
+    console.log("Repo:" + AppConfig.getAppInfo(null));
   }
 }
 
