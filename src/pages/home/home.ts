@@ -22,37 +22,39 @@ export class HomePage {
   ionViewDidEnter() {
     let points = POINTS;
     let cluster, markers = [];
+    let circle = null;
 
     let map = new AMap.Map(this.map_container.nativeElement, {
       mapStyle: 'amap://styles/45f13eb0ee5aa9cf0a01e92293754bdd',
       view: new AMap.View2D({ //创建地图二维视口
         //position:, 默认为中心点
-        zoom: 5, //设置地图缩放级别
+        zoom: 10, //设置地图缩放级别
         resizeEnable: true
       }),
     });
-    //加载IP定位插件
-    map.plugin(["AMap.CitySearch"], function () {
-      //实例化城市查询类
-      let citysearch = new AMap.CitySearch();
-      //自动获取用户IP，返回当前城市
-      citysearch.getLocalCity();
-      AMap.event.addListener(citysearch, "complete", function (result) {
-        if (result && result.city && result.bounds) {
-          let cityinfo = result.city;
-          let citybounds = result.bounds;
-          console.log("您当前所在城市：" + cityinfo + "");
-          AppConfig.getCity(cityinfo);
-          //地图显示当前城市
-          map.setBounds(citybounds);
-        }
-        else {
-          console.log("您当前所在城市：" + result.info + "");
-          AppConfig.getCity(result.info);
-        }
-      });
-      AMap.event.addListener(citysearch, "error", function (result) { alert(result.info); });
-    });
+    console.log("Zoom:" + map.getZoom());
+    // //加载IP定位插件
+    // map.plugin(["AMap.CitySearch"], function () {
+    //   //实例化城市查询类
+    //   let citysearch = new AMap.CitySearch();
+    //   //自动获取用户IP，返回当前城市
+    //   citysearch.getLocalCity();
+    //   AMap.event.addListener(citysearch, "complete", function (result) {
+    //     if (result && result.city && result.bounds) {
+    //       let cityinfo = result.city;
+    //       let citybounds = result.bounds;
+    //       console.log("您当前所在城市：" + cityinfo + "");
+    //       AppConfig.getCity(cityinfo);
+    //       //地图显示当前城市
+    //       map.setBounds(citybounds);
+    //     }
+    //     else {
+    //       console.log("您当前所在城市：" + result.info + "");
+    //       AppConfig.getCity(result.info);
+    //     }
+    //   });
+    //   AMap.event.addListener(citysearch, "error", function (result) { alert(result.info); });
+    // });
 
     let infoWindow = new AMap.InfoWindow({
       offset: new AMap.Pixel(0, -25) //窗口偏移
@@ -62,6 +64,17 @@ export class HomePage {
       map: map
     });
     marker.content = "中心点";
+
+    circle = new AMap.Circle({
+      center: map.getCenter(),// 圆心位置
+      radius: 200000/map.getZoom(), //半径
+      strokeColor: "#F33", //线颜色
+      strokeOpacity: 1, //线透明度
+      strokeWeight: 0, //线粗细度
+      fillColor: "#ee2200", //填充颜色
+      fillOpacity: 0.35//填充透明度
+    });
+    circle.setMap(map);
 
     console.log(points);
 
@@ -108,20 +121,26 @@ export class HomePage {
       markers = [];
       //点筛选
       for (let i = 0; i < points.length; i += 1) {
-        if (Math.abs(parseFloat(points[i]['lnglat'][0]) - map.getCenter().lng) >= 0) {
-          if (Math.abs(parseFloat(points[i]['lnglat'][0]) - map.getCenter().lng) <= 10 * 1 / map.getZoom()) {
-            if (Math.abs(parseFloat(points[i]['lnglat'][1]) - map.getCenter().lat) >= 0) {
-              if (Math.abs(parseFloat(points[i]['lnglat'][1]) - map.getCenter().lat) <= 10 * 1 / map.getZoom()) {
-                markers.push(new AMap.Marker({
-                  position: points[i]['lnglat'],
-                  content: '<div style="background-color: rgb(255, 255, 255); height: 20px; width: 20px; border: 1px solid rgb(255, 255, 255); border-radius: 12px; box-shadow: rgb(158, 158, 158) 0px 1px 4px; margin: 0px 0 0 0px;"></div><div style="background-color: rgb(82, 150, 243); height: 16px; width: 16px; border: 1px solid rgb(82, 150, 243); border-radius: 15px; box-shadow: rgb(158, 158, 158) 0px 0px 2px; margin: -18px 0 0 2px; "></div>',
-                  offset: new AMap.Pixel(-15, -15)
-                }));
-              }
-            }
-          }
+        //let diff_X = Math.abs(parseFloat(points[i]['lnglat'][0]) - parseFloat(map.getCenter().lng));
+        //let diff_Y = Math.abs(parseFloat(points[i]['lnglat'][1]) - parseFloat(map.getCenter().lat));
+        let lnglat = new AMap.LngLat(points[i]['lnglat'][0],points[i]['lnglat'][1]);
+        let distance = lnglat.distance(map.getCenter());
+
+        if (distance <= 200000/map.getZoom()) {
+          markers.push(new AMap.Marker({
+            position: lnglat,
+            content: '<div style="background-color: rgb(255, 255, 255); height: 20px; width: 20px; border: 1px solid rgb(255, 255, 255); border-radius: 12px; box-shadow: rgb(158, 158, 158) 0px 1px 4px; margin: 0px 0 0 0px;"></div><div style="background-color: rgb(82, 150, 243); height: 16px; width: 16px; border: 1px solid rgb(82, 150, 243); border-radius: 15px; box-shadow: rgb(158, 158, 158) 0px 0px 2px; margin: -18px 0 0 2px; "></div>',
+            offset: new AMap.Pixel(-15, -15)
+          }));
         }
       }
+
+      circle.setCenter(map.getCenter());
+      circle.setRadius(200000/map.getZoom());
+
+
+      console.log("Zoom:"+map.getZoom());
+      console.log("DPI:"+map.getScale());
       console.log(markers);
       let count = markers.length;
       console.log(count);
@@ -150,6 +169,7 @@ export class HomePage {
       }
       //绘制点与聚合点
       addCluster(2, _renderCluserMarker);
+      //map.setFitView();
 
     }
 
