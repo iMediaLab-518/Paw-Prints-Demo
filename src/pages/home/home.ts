@@ -67,7 +67,7 @@ export class HomePage {
 
     circle = new AMap.Circle({
       center: map.getCenter(),// 圆心位置
-      radius: 200000/map.getZoom(), //半径
+      radius: map.getScale() / 15, //半径
       strokeColor: "#F33", //线颜色
       strokeOpacity: 1, //线透明度
       strokeWeight: 0, //线粗细度
@@ -93,6 +93,8 @@ export class HomePage {
     map.on('mapmove', pinMoving);
     map.on('moveend', pinDown);
     map.on('moveend', mapChange);
+    map.on('mousemove', mapShowLine);
+    circle.on('dblclick', mapDoubleClick);
     /******************/
 
     function pinUp(e) {
@@ -116,6 +118,44 @@ export class HomePage {
       infoWindow.open(map, e.target.getPosition());
     }
 
+    function mapShowLine(e) {
+      let lineArrX = [
+        [e.lnglat.getLng(), 0],
+        [e.lnglat.getLng(), 180],
+        [e.lnglat.getLng(), -180]
+      ];
+
+      let lineArrY = [
+        [0, e.lnglat.getLat()],
+        [180, e.lnglat.getLat()],
+        [-180, e.lnglat.getLat()]
+      ];
+
+      let polyline_x = new AMap.Polyline({
+        path: lineArrX,          //设置线覆盖物路径
+        strokeColor: "#3366FF", //线颜色
+        strokeOpacity: 1,       //线透明度
+        strokeWeight: 1,        //线宽
+        strokeStyle: "solid",   //线样式
+        strokeDasharray: [10, 5] //补充线样式
+      });
+      let polyline_y = new AMap.Polyline({
+        path: lineArrY,          //设置线覆盖物路径
+        strokeColor: "#3366FF", //线颜色
+        strokeOpacity: 1,       //线透明度
+        strokeWeight: 1,        //线宽
+        strokeStyle: "solid",   //线样式
+        strokeDasharray: [10, 5] //补充线样式
+      });
+      //polyline_x.setMap(map);
+      //polyline_y.setMap(map);
+
+    }
+
+    function mapDoubleClick(e) {
+      map.setZoomAndCenter(map.getZoom() + 1, [e.lnglat.getLng(), e.lnglat.getLat()]);
+    }
+
     function mapChange(e) {
       //点数组初始化
       markers = [];
@@ -123,10 +163,10 @@ export class HomePage {
       for (let i = 0; i < points.length; i += 1) {
         //let diff_X = Math.abs(parseFloat(points[i]['lnglat'][0]) - parseFloat(map.getCenter().lng));
         //let diff_Y = Math.abs(parseFloat(points[i]['lnglat'][1]) - parseFloat(map.getCenter().lat));
-        let lnglat = new AMap.LngLat(points[i]['lnglat'][0],points[i]['lnglat'][1]);
+        let lnglat = new AMap.LngLat(points[i]['lnglat'][0], points[i]['lnglat'][1]);
         let distance = lnglat.distance(map.getCenter());
 
-        if (distance <= 200000/map.getZoom()) {
+        if (distance <= map.getScale() / 15) {
           markers.push(new AMap.Marker({
             position: lnglat,
             content: '<div style="background-color: rgb(255, 255, 255); height: 20px; width: 20px; border: 1px solid rgb(255, 255, 255); border-radius: 12px; box-shadow: rgb(158, 158, 158) 0px 1px 4px; margin: 0px 0 0 0px;"></div><div style="background-color: rgb(82, 150, 243); height: 16px; width: 16px; border: 1px solid rgb(82, 150, 243); border-radius: 15px; box-shadow: rgb(158, 158, 158) 0px 0px 2px; margin: -18px 0 0 2px; "></div>',
@@ -136,11 +176,11 @@ export class HomePage {
       }
 
       circle.setCenter(map.getCenter());
-      circle.setRadius(200000/map.getZoom());
+      circle.setRadius(map.getScale() / 15);
 
 
-      console.log("Zoom:"+map.getZoom());
-      console.log("DPI:"+map.getScale());
+      console.log("Zoom:" + map.getZoom());
+      console.log("DPI:" + map.getScale() + "Radius:" + (map.getScale() / 10).toString());
       console.log(markers);
       let count = markers.length;
       console.log(count);
