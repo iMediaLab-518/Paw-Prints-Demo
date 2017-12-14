@@ -1,5 +1,5 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
-import { NavController } from 'ionic-angular';
+import { NavController, AlertController} from 'ionic-angular';
 import { AppConfig } from './../../app/app.config';
 import { POINTS } from './../../app/points';
 
@@ -11,15 +11,17 @@ import { POINTS } from './../../app/points';
 export class HomePage {
   @ViewChild('map_container') map_container: ElementRef;
 
-  constructor(public navCtrl: NavController) {
+  constructor(public navCtrl: NavController, public alertCtrl: AlertController) {
 
   }
 
   ionViewDidLoad() {
-
+    
   }
 
   ionViewDidEnter() {
+    var self = this;  //防止 this 指针丢失的笨方法，待改进
+
     let points = POINTS;
     let cluster, markers = [];
     let circle = null;
@@ -60,14 +62,16 @@ export class HomePage {
       offset: new AMap.Pixel(0, -25) //窗口偏移
     });
 
-    let marker = new AMap.Marker({
-      map: map
+    let Pin = new AMap.Marker({
+      map: map,
+      extData: '中心点'
     });
-    marker.content = "中心点";
+    console.log(Pin.getExtData());
 
     circle = new AMap.Circle({
       center: map.getCenter(),// 圆心位置
       radius: map.getScale() / 15, //半径
+      bubble: true, //冒泡点击事件到 map
       strokeColor: "#F33", //线颜色
       strokeOpacity: 1, //线透明度
       strokeWeight: 0, //线粗细度
@@ -87,35 +91,45 @@ export class HomePage {
     // }
 
     /***** 事件注册 *****/
-    marker.on('click', markerClick);
+    Pin.on('click', markerClick);
     map.on('complete', mapChange);
     map.on('movestart', pinUp);
     map.on('mapmove', pinMoving);
     map.on('moveend', pinDown);
     map.on('moveend', mapChange);
     map.on('mousemove', mapShowLine);
-    circle.on('dblclick', mapDoubleClick);
+    //circle.on('dblclick', mapDoubleClick);
     /******************/
 
     function pinUp(e) {
-      marker.setClickable(false);
-      //marker.setAnimation('AMAP_ANIMATION_BOUNCE'); // 设置点标记的动画效果，此处为弹跳效果
+      Pin.setClickable(false);
+      //Pin.setAnimation('AMAP_ANIMATION_BOUNCE'); // 设置点标记的动画效果，此处为弹跳效果
     }
 
     function pinMoving(e) {
       //console.log(map.getCenter());
-      marker.setPosition(map.getCenter());
+      Pin.setPosition(map.getCenter());
     }
 
     function pinDown(e) {
-      marker.setClickable(true);
-      //marker.setAnimation('AMAP_ANIMATION_NONE'); // 取消点标记的动画效果l.
-      marker.setPosition(map.getCenter()); //纠正缓动中心点位置
+      Pin.setClickable(true);
+      //Pin.setAnimation('AMAP_ANIMATION_NONE'); // 取消点标记的动画效果l.
+      Pin.setPosition(map.getCenter()); //纠正缓动中心点位置
     }
 
     function markerClick(e) {
-      infoWindow.setContent(e.target.content);
-      infoWindow.open(map, e.target.getPosition());
+      map.setFitView();
+
+      //Alert 消息弹窗
+      let alert = self.alertCtrl.create({
+        title: 'Infomation',
+        subTitle: Pin.getExtData(),
+        buttons: ['OK']
+      });
+      alert.present();
+
+      infoWindow.setContent(Pin.getExtData());
+      infoWindow.open(map, Pin.getPosition());
     }
 
     function mapShowLine(e) {
@@ -170,8 +184,10 @@ export class HomePage {
           markers.push(new AMap.Marker({
             position: lnglat,
             content: '<div style="background-color: rgb(255, 255, 255); height: 20px; width: 20px; border: 1px solid rgb(255, 255, 255); border-radius: 12px; box-shadow: rgb(158, 158, 158) 0px 1px 4px; margin: 0px 0 0 0px;"></div><div style="background-color: rgb(82, 150, 243); height: 16px; width: 16px; border: 1px solid rgb(82, 150, 243); border-radius: 15px; box-shadow: rgb(158, 158, 158) 0px 0px 2px; margin: -18px 0 0 2px; "></div>',
-            offset: new AMap.Pixel(-15, -15)
+            offset: new AMap.Pixel(-15, -15),
+            title: '第'+i+'点'
           }));
+          //markers[i].on('click', markerClick);
         }
       }
 
