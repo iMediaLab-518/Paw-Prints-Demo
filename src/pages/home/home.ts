@@ -20,15 +20,15 @@ export interface MapOptions {
 })
 export class HomePage {
   @ViewChild('map_container') map_container: ElementRef;
-  loader:Loading;
+  loader: Loading;
   private localized: boolean = false;
   public map = null;
   public element: Element = null;
 
-  constructor(public navCtrl: NavController, 
+  constructor(public navCtrl: NavController,
     protected alertCtrl: AlertController,
-    private platform:Platform , 
-    private loadingCtrl:LoadingController) {
+    private platform: Platform,
+    private loadingCtrl: LoadingController) {
 
   }
 
@@ -125,7 +125,7 @@ export class HomePage {
       });
     });
   }
-  
+
   /**
    * 定位出错提示
    */
@@ -182,6 +182,7 @@ export class HomePage {
     let points = POINTS;
     let cluster, markers = [];
     let circle = null;
+    let clickListener = null;
 
     let map = new AMap.Map(this.map_container.nativeElement, {
       mapStyle: 'amap://styles/45f13eb0ee5aa9cf0a01e92293754bdd',
@@ -290,6 +291,24 @@ export class HomePage {
       infoWindow.open(map, Pin.getPosition());
     }
 
+    function _onClick(e: any): void {
+      map.setFitView();
+
+      console.log("Did");
+      console.log(e);
+      console.log(e.lnglat);
+
+      //Alert 消息弹窗
+      let alert = self.alertCtrl.create({
+        title: 'Marker Infomation',
+        subTitle: e.target.getExtData(),
+        buttons: ['OK']
+      });
+      alert.present();
+      //infoWindow.setContent(e.target.getExtData());
+      //infoWindow.open(map, [e.lnglat.getLng(), e.lnglat.getLat()]);
+    }
+
     function mapShowLine(e: any): void {
       let lineArrX = [
         [e.lnglat.getLng(), 0],
@@ -325,12 +344,16 @@ export class HomePage {
     }
 
     function mapDoubleClick(e: any): void {
-      map.setCenter([e.lnglat.getLng(), e.lnglat.getLat()]);
+      console.log([e.lnglat.getLng(),e.lnglat.getLat()])
+      map.setCenter([e.lnglat.getLng(),e.lnglat.getLat()]);
     }
 
     function mapChange(e: any): void {
       //点数组初始化
       markers = [];
+      if (clickListener) {
+        AMap.event.removeListener(clickListener);
+      }
       //点筛选
       for (let i = 0; i < points.length; i += 1) {
         //let diff_X = Math.abs(parseFloat(points[i]['lnglat'][0]) - parseFloat(map.getCenter().lng));
@@ -339,12 +362,15 @@ export class HomePage {
         let distance = lnglat.distance(map.getCenter());
 
         if (distance <= map.getScale() / 15) {
-          markers.push(new AMap.Marker({
+          let temp = new AMap.Marker({
             position: lnglat,
             content: '<div style="background-color: rgb(255, 255, 255); height: 20px; width: 20px; border: 1px solid rgb(255, 255, 255); border-radius: 12px; box-shadow: rgb(158, 158, 158) 0px 1px 4px; margin: 0px 0 0 0px;"></div><div style="background-color: rgb(82, 150, 243); height: 16px; width: 16px; border: 1px solid rgb(82, 150, 243); border-radius: 15px; box-shadow: rgb(158, 158, 158) 0px 0px 2px; margin: -18px 0 0 2px; "></div>',
             offset: new AMap.Pixel(-15, -15),
-            title: '第' + i + '点'
-          }));
+            extData: '第' + i + '点'
+          });
+          //temp.on('click', markerClick);
+          clickListener = AMap.event.addListener(temp, "click", _onClick);
+          markers.push(temp);
           //markers[i].on('click', markerClick);
         }
       }
