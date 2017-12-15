@@ -1,8 +1,18 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
-import { NavController, AlertController} from 'ionic-angular';
+import { NavController, AlertController, Platform, LoadingController, Loading } from 'ionic-angular';
+import { Observable } from 'rxjs/Observable';
+
+import { MapConst } from './map.const';
+
 import { AppConfig } from './../../app/app.config';
 import { POINTS } from './../../app/points';
 
+export interface MapOptions {
+  mapStyle: string;
+  lat: number;
+  lon: number;
+  zoom: number;
+}
 
 @Component({
   selector: 'page-home',
@@ -10,16 +20,163 @@ import { POINTS } from './../../app/points';
 })
 export class HomePage {
   @ViewChild('map_container') map_container: ElementRef;
+  loader:Loading;
+  private localized: boolean = false;
+  public map = null;
+  public element: Element = null;
 
-  constructor(public navCtrl: NavController, public alertCtrl: AlertController) {
+  constructor(public navCtrl: NavController, 
+    protected alertCtrl: AlertController,
+    private platform:Platform , 
+    private loadingCtrl:LoadingController) {
 
   }
 
-  ionViewDidLoad() {
-    
+  /***
+   * 创建地图
+   * @returns {Promise}
+   */
+  public initMap(mapEl: Element, opts: MapOptions = {
+    mapStyle: MapConst.DEFAULT_MAPSTYLE,
+    lat: MapConst.DEFAULT_LAT,
+    lon: MapConst.DEFAULT_LNG,
+    zoom: MapConst.DEFAULT_ZOOM
+  }): Promise<any> {
+    this.element = mapEl;
+    console.log("createMap...");
+
+    return new Promise((resolve: Function) => {
+      () => {
+        console.log("loadMap success");
+        let map = new AMap.Map(mapEl, {
+          mapStyle: opts.mapStyle,
+          view: new AMap.View2D({
+            //position: [opts.lon, opts.lat],
+            resizeEnable: true,
+            zoom: opts.zoom
+          })
+        });
+
+        this.map = map;
+        resolve(this.map);
+      }
+    });
   }
 
-  ionViewDidEnter() {
+  /***
+   * 调用 AMap.Geolocation 获取当前位置
+   * @returns {Observable}
+   */
+  public getGeolocationByAMap(): Observable<any> {
+    return new Observable((sub: any) => {
+      console.log("getGeolocationByAMap");
+      let geolocation;
+      let map = this.map;
+      map.plugin('AMap.Geolocation', function () {
+        geolocation = new AMap.Geolocation({
+          enableHighAccuracy: true,//是否使用高精度定位，默认:true
+          timeout: 5000,          //超过 5000ms 后停止定位，默认：无穷大
+          buttonOffset: new AMap.Pixel(10, 20),//定位按钮与设置的停靠位置的偏移量，默认：Pixel(10, 20)
+          // zoomToAccuracy: true,      //定位成功后调整地图视野范围使定位位置及精度范围视野内可见，默认：false
+          buttonPosition: 'LB',
+          showCircle: true,        //定位成功后用圆圈表示定位精度范围，默认：true
+          panToLocation: true
+        });
+        map.addControl(geolocation);
+        geolocation.getCurrentPosition();
+
+        AMap.event.addListener(geolocation, 'complete', (data) => {
+          console.log("geolocation complete");
+
+          this.loader.dismiss();
+          this.localized = true;
+
+          // 存储当前城市
+          localStorage.setItem('citycode', data.addressComponent.citycode);
+          localStorage.setItem('city', data.addressComponent.city);
+          sub.next(data);
+          sub.complete();
+        });
+        AMap.event.addListener(geolocation, 'error', (error) => {
+          console.log("geolocation error" + error);
+          sub.error(error);
+          this.loader.dismiss();
+          this.alertNoGps();
+        });
+      });
+    });
+  }
+
+  /***
+   * 地图加载完毕
+   */
+  onMapReady() {
+    console.log("onMapReady");
+    this.platform.ready().then(() => {
+      this.getGeolocationByAMap().subscribe(() => {
+        console.log("定位成功");
+        const mapElement: Element = this.map_container.nativeElement;
+        if (mapElement) {
+          console.log("显示当前位置");
+          mapElement.classList.add('show-map');
+        }
+      }, error => {
+        console.log(error);
+      });
+    });
+  }
+  
+  /**
+   * 定位出错提示
+   */
+  private alertNoGps() {
+    const alert = this.alertCtrl.create({
+      title: '错误',
+      subTitle: '定位服务不可用,请到设置里面开启!',
+      enableBackdropDismiss: false,
+      buttons: [{
+        text: '好的',
+        handler: () => {
+        }
+      }]
+    });
+    alert.present();
+  }
+
+  /***
+   * 按下‘+’按钮
+   * 
+   */
+  onClick1(): void {
+    //存入全局配置信息
+    console.log("Repo:" + AppConfig.getAppInfo("这是全局储存的信息"));
+  }
+
+  /***
+   * 按下‘-’按钮
+   * 
+   */
+  onClick2(): void {
+    //取出全局配置信息
+    console.log("Repo:" + AppConfig.getAppInfo(null));
+  }
+
+
+  ionViewDidLoad(): void {
+    const loader = this.loadingCtrl.create({
+      content: "加载中...",
+      spinner: "crescent",
+      showBackdrop: true
+    });
+    this.loader = loader;
+    loader.present();
+  }
+
+  /***
+   * ionic 视图加载成功
+   *
+   */
+  ionViewDidEnter(): void {
     var self = this;  //防止 this 指针丢失的笨方法，待改进
 
     let points = POINTS;
@@ -34,6 +191,7 @@ export class HomePage {
         resizeEnable: true
       }),
     });
+    this.loader.dismiss();
     console.log("Zoom:" + map.getZoom());
     // //加载IP定位插件
     // map.plugin(["AMap.CitySearch"], function () {
@@ -101,23 +259,23 @@ export class HomePage {
     //circle.on('dblclick', mapDoubleClick);
     /******************/
 
-    function pinUp(e) {
+    function pinUp(e: any): void {
       Pin.setClickable(false);
       //Pin.setAnimation('AMAP_ANIMATION_BOUNCE'); // 设置点标记的动画效果，此处为弹跳效果
     }
 
-    function pinMoving(e) {
+    function pinMoving(e: any): void {
       //console.log(map.getCenter());
       Pin.setPosition(map.getCenter());
     }
 
-    function pinDown(e) {
+    function pinDown(e: any): void {
       Pin.setClickable(true);
       //Pin.setAnimation('AMAP_ANIMATION_NONE'); // 取消点标记的动画效果l.
       Pin.setPosition(map.getCenter()); //纠正缓动中心点位置
     }
 
-    function markerClick(e) {
+    function markerClick(e: any): void {
       map.setFitView();
 
       //Alert 消息弹窗
@@ -132,7 +290,7 @@ export class HomePage {
       infoWindow.open(map, Pin.getPosition());
     }
 
-    function mapShowLine(e) {
+    function mapShowLine(e: any): void {
       let lineArrX = [
         [e.lnglat.getLng(), 0],
         [e.lnglat.getLng(), 180],
@@ -166,11 +324,11 @@ export class HomePage {
 
     }
 
-    function mapDoubleClick(e) {
+    function mapDoubleClick(e: any): void {
       map.setZoomAndCenter(map.getZoom() + 1, [e.lnglat.getLng(), e.lnglat.getLat()]);
     }
 
-    function mapChange(e) {
+    function mapChange(e: any): void {
       //点数组初始化
       markers = [];
       //点筛选
@@ -185,7 +343,7 @@ export class HomePage {
             position: lnglat,
             content: '<div style="background-color: rgb(255, 255, 255); height: 20px; width: 20px; border: 1px solid rgb(255, 255, 255); border-radius: 12px; box-shadow: rgb(158, 158, 158) 0px 1px 4px; margin: 0px 0 0 0px;"></div><div style="background-color: rgb(82, 150, 243); height: 16px; width: 16px; border: 1px solid rgb(82, 150, 243); border-radius: 15px; box-shadow: rgb(158, 158, 158) 0px 0px 2px; margin: -18px 0 0 2px; "></div>',
             offset: new AMap.Pixel(-15, -15),
-            title: '第'+i+'点'
+            title: '第' + i + '点'
           }));
           //markers[i].on('click', markerClick);
         }
@@ -230,7 +388,7 @@ export class HomePage {
     }
 
     //点聚合
-    function addCluster(tag, _renderCluserMarker) {
+    function addCluster(tag: any, _renderCluserMarker: any): void {
       if (cluster) {
         cluster.setMap(null);
       }
@@ -277,14 +435,6 @@ export class HomePage {
     }
   }
 
-  onClick1() {
-    //存入全局配置信息
-    console.log("Repo:" + AppConfig.getAppInfo("这是全局储存的信息"));
-  }
-  onClick2() {
-    //取出全局配置信息
-    console.log("Repo:" + AppConfig.getAppInfo(null));
-  }
 }
 
 
