@@ -1,0 +1,21 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>Paw Prints Demo</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+  <div class="amap-zoomcontrol">
+    <div #zoom_in class="button button-balanced amap-zoom-touch-plus" (click)="onClick1()">
+      <div>+</div>
+    </div>
+    <div #zoom_out class="button button-balanced amap-zoom-touch-minus" (click)="onClick2()">
+      <div>−</div>
+    </div>
+  </div>
+  <div #map_container class="map_container">
+  </div>
+</ion-content>
