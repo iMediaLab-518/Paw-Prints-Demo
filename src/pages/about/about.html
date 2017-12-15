@@ -8,8 +8,21 @@
 </ion-header>
 
 <ion-content>
-  <div padding>
-    This is our lab's first original mobile application!
-    <button ion-button block color="dark" (click)="showAlert()">Show Basic Alert</button>
-  </div>
+  <ion-list>
+    
+      <ion-item>
+        <ion-label floating>Username</ion-label>
+        <ion-input type="text"></ion-input>
+      </ion-item>
+    
+      <ion-item>
+        <ion-label floating>Password</ion-label>
+        <ion-input type="password"></ion-input>
+      </ion-item>
+    
+    </ion-list>
+    
+    <div padding>
+      <button ion-button color="secondary">Sign In</button>
+    </div>
 </ion-content>

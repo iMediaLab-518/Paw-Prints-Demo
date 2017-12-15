@@ -232,9 +232,9 @@ export class HomePage {
       bubble: true, //冒泡点击事件到 map
       strokeColor: "#F33", //线颜色
       strokeOpacity: 1, //线透明度
-      strokeWeight: 0, //线粗细度
-      fillColor: "#ee2200", //填充颜色
-      fillOpacity: 0.35//填充透明度
+      strokeWeight: 0.8, //线粗细度
+      fillColor: "#ffffff", //填充颜色
+      fillOpacity: 0//填充透明度
     });
     circle.setMap(map);
 
@@ -256,12 +256,12 @@ export class HomePage {
     map.on('moveend', pinDown);
     map.on('moveend', mapChange);
     map.on('mousemove', mapShowLine);
-    //circle.on('dblclick', mapDoubleClick);
+    map.on('dblclick', mapDoubleClick);
     /******************/
 
     function pinUp(e: any): void {
       Pin.setClickable(false);
-      //Pin.setAnimation('AMAP_ANIMATION_BOUNCE'); // 设置点标记的动画效果，此处为弹跳效果
+      //Pin.setOffset(new AMap.Pixel(-25, 0));
     }
 
     function pinMoving(e: any): void {
@@ -271,7 +271,7 @@ export class HomePage {
 
     function pinDown(e: any): void {
       Pin.setClickable(true);
-      //Pin.setAnimation('AMAP_ANIMATION_NONE'); // 取消点标记的动画效果l.
+      Pin.setAnimation('AMAP_ANIMATION_DROP'); // 设置点标记的动画效果，此处为下坠效果
       Pin.setPosition(map.getCenter()); //纠正缓动中心点位置
     }
 
@@ -325,7 +325,7 @@ export class HomePage {
     }
 
     function mapDoubleClick(e: any): void {
-      map.setZoomAndCenter(map.getZoom() + 1, [e.lnglat.getLng(), e.lnglat.getLat()]);
+      map.setCenter([e.lnglat.getLng(), e.lnglat.getLat()]);
     }
 
     function mapChange(e: any): void {

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NavController, NavParams, AlertController } from 'ionic-angular';
+import { NavController, NavParams, AlertController, ModalController } from 'ionic-angular';
 
 @Component({
   selector: 'page-about',
@@ -7,7 +7,7 @@ import { NavController, NavParams, AlertController } from 'ionic-angular';
 })
 export class AboutPage {
 
-  constructor(public navCtrl: NavController, public navParams: NavParams, public alertCtrl: AlertController) {
+  constructor(public navCtrl: NavController, public navParams: NavParams, public alertCtrl: AlertController, public modalCtrl: ModalController) {
 
   }
 
@@ -19,4 +19,9 @@ export class AboutPage {
     });
     alert.present();
   }
+
+  // presentModal() {
+  //   let modal = this.modalCtrl.create(ModalPage);
+  //   modal.present();
+  // }
 }
