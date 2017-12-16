@@ -4,6 +4,8 @@ import { IonicApp, IonicErrorHandler, IonicModule } from 'ionic-angular';
 
 import { MyApp } from './app.component';
 import { HomePage } from '../pages/home/home';
+import { MapCtrl } from "../pages/home/map";
+import { MapService } from "../pages/home/map.service";
 import { ListPage } from '../pages/list/list';
 import { AboutPage } from '../pages/about/about';
 
@@ -15,7 +17,8 @@ import { SplashScreen } from '@ionic-native/splash-screen';
     MyApp,
     HomePage,
     ListPage,
-    AboutPage
+    AboutPage,
+    MapCtrl
   ],
   imports: [
     BrowserModule,
@@ -26,12 +29,14 @@ import { SplashScreen } from '@ionic-native/splash-screen';
     MyApp,
     HomePage,
     ListPage,
-    AboutPage
+    AboutPage,
+    MapCtrl,
   ],
   providers: [
+    MapService,
     StatusBar,
     SplashScreen,
-    {provide: ErrorHandler, useClass: IonicErrorHandler}
+    { provide: ErrorHandler, useClass: IonicErrorHandler }
   ]
 })
-export class AppModule {}
+export class AppModule { }
