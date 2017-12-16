@@ -238,6 +238,8 @@ export class MapService {
             // AMap.clear();
             this.map.clearMap();
             this.drawCircle();
+            this.drawPin();
+
             console.log("drawCircle success");
         });
     }
@@ -262,6 +264,27 @@ export class MapService {
         return new AMap.Circle(circleOption);
     }
 
+    /***
+     * 绘制中心点大头针
+     */
+    public drawPin(): any {
+        let map = this.map;
+
+        let infoWindow = new AMap.InfoWindow({
+            offset: new AMap.Pixel(0, -25) //窗口偏移
+        });
+
+        let PinOption = {
+            map: map,
+            extData: '中心点'
+        };
+        let Pin = new AMap.Marker(PinOption);
+
+        AMap.event.addListener(Pin, 'click', (e) => {
+            infoWindow.open(this.map, Pin.getPosition());
+        });
+        return Pin;
+    }
 
 
     /***
