@@ -12,7 +12,7 @@ export class MapConst {
   }
 
   public static get DEFAULT_ZOOM(): number {
-    return 12;
+    return 10;
   }
 
   public static get DEFAULT_RESIZEENABLE(): boolean {

@@ -75,12 +75,13 @@ export class HomePage {
     });
   }
 
+
   /**
    * 出错提示
    */
   private alertNoGps() {
     const alert = this.alertCtrl.create({
-      title: 'OFBH5',
+      title: '错误',
       subTitle: '定位服务不可用,请到设置里面开启!',
       enableBackdropDismiss: false,
       buttons: [{
@@ -92,13 +93,14 @@ export class HomePage {
     alert.present();
   }
 
-  /***
-   * 地图中心点变更
-   */
-  onCenterChanged() {
-    console.log("onCenterChanged");
+
+  displayCircle() {
     this.platform.ready().then(() => {
-      
+      this.mapService.showRegionalInfo().subscribe(() => {
+        console.log("draw circle");
+      }, error => {
+        console.log(error);
+      });
     });
   }
 
