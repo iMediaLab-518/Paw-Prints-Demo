@@ -47,20 +47,22 @@ export class MapCtrl implements AfterViewInit {
             this.onMapReady.emit({
                 value: this.map
             });
+            this.displayCircle.emit({
+                value: this.map
+            });
         });
 
-        AMap.event.addListener(this.map, 'moveend', () => {
-            let center = this.map.getCenter();
-            console.log(center);
+        AMap.event.addListener(this.map, 'mapmove', () => {
+            console.log("可视范围调整");
 
             this.displayCircle.emit({
                 value: this.map
             });
         });
 
-        AMap.event.addListener(this.map, 'movestart', () => {
+        // AMap.event.addListener(this.map, 'movestart', () => {
           
-        });
+        // });
         
         // AMap.event.addListener(this.map, 'dragstart', () => {
         //   this.onDragStart.emit({

@@ -69,7 +69,7 @@ export class HomePage {
         sub.complete();
       }, error => {
         sub.error(error);
-        this.loader.dismiss();
+        this.loader_locate.dismiss();
         this.alertNoGps();
       });
     });
@@ -82,7 +82,7 @@ export class HomePage {
   private alertNoGps() {
     const alert = this.alertCtrl.create({
       title: '错误',
-      subTitle: '定位服务不可用,请到设置里面开启!',
+      subTitle: '系统定位服务不可用,请到设置里面开启!',
       enableBackdropDismiss: false,
       buttons: [{
         text: '好的',

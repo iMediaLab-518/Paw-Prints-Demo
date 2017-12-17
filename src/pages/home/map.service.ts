@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { AlertController } from 'ionic-angular';
 import { Observable } from 'rxjs/Observable';
 import { Geolocation, Geoposition } from 'ionic-native';
 import { MapConst } from './map.const';
@@ -12,10 +13,13 @@ export interface IMapOptions {
 export class MapService {
     private map = null;
     private element: Element = null;
+    private circle = null;
+    private Pin = null;
+    private pinAlert = null;
     marker: Array<any> = [];
     windowsArr: Array<any> = [];
 
-    constructor() {
+    constructor(protected alertCtrl: AlertController) {
     }
 
     /***
@@ -97,9 +101,9 @@ export class MapService {
      * @param maximumAge
      * @returns {Promise<Coordinates>}
      */
-    private getCurrentPosition(maximumAge: number = 10000): Promise<Coordinates> {
+    private getCurrentPosition(maximumAge: number = 5000): Promise<Coordinates> {
         const options = {
-            timeout: 10000,
+            timeout: 5000,
             enableHighAccuracy: true,
             maximumAge
         };
@@ -141,6 +145,7 @@ export class MapService {
                     });
                 }).catch(error => {
                     console.log("displayCurrentPositionError:" + error);
+                    sub.error(error);
                 });
             }
         });
@@ -236,7 +241,7 @@ export class MapService {
             // note:也可以加载js的时候把插件顺带加载
             // 清除所有marker
             // AMap.clear();
-            this.map.clearMap();
+            //this.map.clearMap();
             this.drawCircle();
             this.drawPin();
 
@@ -250,18 +255,26 @@ export class MapService {
     public drawCircle(): any {
         let map = this.map;
 
-        let circleOption = {
-            map: this.map,
-            center: map.getCenter(),// 圆心位置
-            radius: map.getScale() / 15, //半径
-            bubble: true, //冒泡点击事件到 map
-            strokeColor: "#F33", //线颜色
-            strokeOpacity: 1, //线透明度
-            strokeWeight: 0.8, //线粗细度
-            fillColor: "#ffffff", //填充颜色
-            fillOpacity: 0  //填充透明度
-        };
-        return new AMap.Circle(circleOption);
+        if (this.circle) {
+            this.circle.setCenter(map.getCenter());
+            this.circle.setRadius(map.getScale() / 15);
+        }
+        else {
+            let circleOption = {
+                map: this.map,
+                center: map.getCenter(),// 圆心位置
+                radius: map.getScale() / 15, //半径
+                bubble: true, //冒泡点击事件到 map
+                strokeColor: "#F33", //线颜色
+                strokeOpacity: 1, //线透明度
+                strokeWeight: 0.8, //线粗细度
+                fillColor: "#ffffff", //填充颜色
+                fillOpacity: 0  //填充透明度
+            };
+            this.circle = new AMap.Circle(circleOption);
+            console.log("circle firstly");
+        }
+        return this.circle;
     }
 
     /***
@@ -269,21 +282,42 @@ export class MapService {
      */
     public drawPin(): any {
         let map = this.map;
+        let self = this;
 
-        let infoWindow = new AMap.InfoWindow({
-            offset: new AMap.Pixel(0, -25) //窗口偏移
-        });
+        if (this.Pin) {
+            //console.log(this.Pin);
+            //console.log(this.Pin.getPosition());
+            this.Pin.setPosition(map.getCenter());
+        }
+        else {
+            let PinOption = {
+                map: map,
+                position: map.getCenter(),
+                extData: '中心点'
+            };
+            this.Pin = new AMap.Marker(PinOption);
 
-        let PinOption = {
-            map: map,
-            extData: '中心点'
-        };
-        let Pin = new AMap.Marker(PinOption);
+            AMap.event.addListener(this.Pin, 'click', (e) => {
+                map.setFitView();
+    
+                console.log("Pin clicked");
+                self.pinAlert = self.alertCtrl.create({
+                    title: 'Infomation',
+                    subTitle: self.Pin.getExtData(),
+                    buttons: ['OK']
+                });
+                self.pinAlert.present();
+            });
 
-        AMap.event.addListener(Pin, 'click', (e) => {
-            infoWindow.open(this.map, Pin.getPosition());
-        });
-        return Pin;
+            console.log("Pin firstly");
+        }
+
+        // this.pinWindow = new AMap.InfoWindow({
+        //     autoMove: true,
+        //     offset: new AMap.Pixel(0, -30),
+        //     closeWhenClickMap: true
+        // });
+        return this.Pin;
     }
 
 
