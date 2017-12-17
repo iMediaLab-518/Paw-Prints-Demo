@@ -3,6 +3,7 @@ import { AlertController } from 'ionic-angular';
 import { Observable } from 'rxjs/Observable';
 import { Geolocation, Geoposition } from 'ionic-native';
 import { MapConst } from './map.const';
+import { POINTS } from './../../app/points';
 
 export interface IMapOptions {
     mapStyle: string;
@@ -11,12 +12,15 @@ export interface IMapOptions {
 
 @Injectable()
 export class MapService {
+    private points = POINTS;
     private map = null;
     private element: Element = null;
     private circle = null;
     private Pin = null;
     private pinAlert = null;
     marker: Array<any> = [];
+    infoMarkers: Array<any> = [];
+    infoMarkersclickListener: Array<any> = [];
     windowsArr: Array<any> = [];
 
     constructor(protected alertCtrl: AlertController) {
@@ -242,9 +246,8 @@ export class MapService {
             // 清除所有marker
             // AMap.clear();
             //this.map.clearMap();
-            this.drawCircle();
+            this.drawVisualArea();
             this.drawPin();
-
             console.log("drawCircle success");
         });
     }
@@ -252,12 +255,17 @@ export class MapService {
     /***
      * 绘制可视圈
      */
-    public drawCircle(): any {
+    public drawVisualArea(): any {
         let map = this.map;
+        let sum = 0;
+        console.log(this.infoMarkers);
+        this.map.remove(this.infoMarkers);
+        this.infoMarkers = [];
 
         if (this.circle) {
             this.circle.setCenter(map.getCenter());
             this.circle.setRadius(map.getScale() / 15);
+            console.log("circle update");
         }
         else {
             let circleOption = {
@@ -273,6 +281,26 @@ export class MapService {
             };
             this.circle = new AMap.Circle(circleOption);
             console.log("circle firstly");
+        }
+        for (let i = 0; i < this.points.length; i += 1) {  //点筛选
+            let lnglat = new AMap.LngLat(this.points[i]['lnglat'][0], this.points[i]['lnglat'][1]);
+            let distance = lnglat.distance(map.getCenter());
+            if (distance <= map.getScale() / 15) {
+                sum += 1;
+                // console.log("X:" + this.points[i]['lnglat'][0] + "Y:" + this.points[i]['lnglat'][1]);
+                // let temp = new AMap.Marker({
+                //     position: lnglat,
+                //     content: '<div style="background-color: rgb(255, 255, 255); height: 20px; width: 20px; border: 1px solid rgb(255, 255, 255); border-radius: 12px; box-shadow: rgb(158, 158, 158) 0px 1px 4px; margin: 0px 0 0 0px;"></div><div style="background-color: rgb(82, 150, 243); height: 16px; width: 16px; border: 1px solid rgb(82, 150, 243); border-radius: 15px; box-shadow: rgb(158, 158, 158) 0px 0px 2px; margin: -18px 0 0 2px; "></div>',
+                //     offset: new AMap.Pixel(-15, -15),
+                //     extData: '第' + i + '点'
+                // });
+                //temp.on('click', markerClick);
+                //clickListener = AMap.event.addListener(temp, "click", _onClick);
+                //this.infoMarkers.push(temp);
+                //markers[i].on('click', markerClick);
+                this.addMarker(sum, this.points[i]['lnglat']);
+                console.log("markers update");
+            }
         }
         return this.circle;
     }
@@ -296,10 +324,9 @@ export class MapService {
                 extData: '中心点'
             };
             this.Pin = new AMap.Marker(PinOption);
-
             AMap.event.addListener(this.Pin, 'click', (e) => {
                 map.setFitView();
-    
+
                 console.log("Pin clicked");
                 self.pinAlert = self.alertCtrl.create({
                     title: 'Infomation',
@@ -308,10 +335,8 @@ export class MapService {
                 });
                 self.pinAlert.present();
             });
-
             console.log("Pin firstly");
         }
-
         // this.pinWindow = new AMap.InfoWindow({
         //     autoMove: true,
         //     offset: new AMap.Pixel(0, -30),
@@ -477,16 +502,19 @@ export class MapService {
      * 添加marker
      */
     addMarker(i, d): any {
-        let lngX = d.location.getLng();
-        let latY = d.location.getLat();
+        let lngX = d[0];
+        let latY = d[1];
         let markerOption = {
             map: this.map,
-            icon: "http://webapi.amap.com/theme/v1.3/markers/n/mark_b" + (i + 1) + ".png",
+            //icon: "https://webapi.amap.com/theme/v1.3/markers/n/mark_b" + (i + 1) + ".png",
+            //content: '<div style="background-color: rgb(255, 255, 255); height: 20px; width: 20px; border: 1px solid rgb(255, 255, 255); border-radius: 12px; box-shadow: rgb(158, 158, 158) 0px 1px 4px; margin: 0px 0 0 0px;"></div><div style="background-color: rgb(82, 150, 243); height: 16px; width: 16px; border: 1px solid rgb(82, 150, 243); border-radius: 15px; box-shadow: rgb(158, 158, 158) 0px 0px 2px; margin: -18px 0 0 2px; "></div>',
+            //offset: new AMap.Pixel(-15, -15),
+            extData: '第' + i + '点',
             position: [lngX, latY],
             topWhenMouseOver: true
         };
-        this.marker.push([lngX, latY]);
-        return new AMap.Marker(markerOption);
+        this.infoMarkers.push(new AMap.Marker(markerOption));
+        return this.infoMarkers;
     }
 
     /***

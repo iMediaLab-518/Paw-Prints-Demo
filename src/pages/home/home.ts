@@ -4,9 +4,6 @@ import {MapService} from "./map.service";
 import {Observable} from 'rxjs/observable';
 
 import { AppConfig } from './../../app/app.config';
-import { POINTS } from './../../app/points';
-
-
 
 @Component({
   selector: 'page-home',
