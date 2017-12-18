@@ -21,6 +21,7 @@ export class MapService {
     marker: Array<any> = [];
     infoMarkers: Array<any> = [];
     infoMarkersclickListener: Array<any> = [];
+    cluster: Array<any> = [];
     windowsArr: Array<any> = [];
 
     constructor(protected alertCtrl: AlertController) {
@@ -247,6 +248,7 @@ export class MapService {
             // AMap.clear();
             //this.map.clearMap();
             this.drawVisualArea();
+            this.addCluster(1);
             this.drawPin();
             console.log("drawCircle success");
         });
@@ -258,7 +260,6 @@ export class MapService {
     public drawVisualArea(): any {
         let map = this.map;
         let sum = 0;
-        console.log(this.infoMarkers);
         this.map.remove(this.infoMarkers);
         this.infoMarkers = [];
 
@@ -299,9 +300,11 @@ export class MapService {
                 //this.infoMarkers.push(temp);
                 //markers[i].on('click', markerClick);
                 this.addMarker(sum, this.points[i]['lnglat']);
-                console.log("markers update");
+                //console.log("markers update");
             }
         }
+        console.log("Markers Length:" + this.infoMarkers.length);
+        //this.addCluster(1);
         return this.circle;
     }
 
@@ -583,5 +586,84 @@ export class MapService {
         s.push("地址：" + address);
         s.push("电话：" + tel);
         return '<div style="font-size: 12px;">' + s.join("<br>") + '</div>';
+    }
+
+    /***
+     * 点聚合
+     */
+    //点聚合
+    addCluster(tag:number): any {
+        let count = this.infoMarkers.length;
+        console.log("Markers length in addCluster():" + count);
+        let _renderCluserMarker = (context) => {
+            let factor = Math.pow(context.count / count, 1 / 20);
+            let div = document.createElement('div');
+            let Hue = 360 - factor * 180;
+            let bgColor = 'hsla(' + Hue + ',100%,50%,0.5)';
+            let fontColor = 'hsla(' + Hue + ',100%,20%,1)';
+            let borderColor = 'hsla(' + Hue + ',100%,40%,1)';
+            let shadowColor = 'hsla(' + Hue + ',100%,50%,1)';
+            div.style.backgroundColor = bgColor;
+            let size = Math.round(30 + Math.pow(context.count / count, 1 / 20));
+            div.style.width = div.style.height = size + 'px';
+            div.style.border = 'solid 0px ' + borderColor;
+            div.style.borderRadius = size / 2 + 'px';
+            div.style.boxShadow = '0 0 1px ' + shadowColor;
+            div.innerHTML = context.count;
+            div.style.lineHeight = size + 'px';
+            div.style.color = fontColor;
+            div.style.fontSize = '14px';
+            div.style.textAlign = 'center';
+            context.marker.setOffset(new AMap.Pixel(-size / 2, -size / 2));
+            context.marker.setContent(div);
+        };
+        //console.log(this.cluster);
+        //et tag: number = 0;
+        if (this.cluster) {
+            this.map.plugin(["AMap.MarkerClusterer"], () => {
+                this.map.remove(this.cluster);
+            });
+            this.cluster = [];
+        }
+        if (tag == 2) {//完全自定义
+            this.map.plugin(["AMap.MarkerClusterer"], () => {
+                this.cluster = new AMap.MarkerClusterer(this.map, this.infoMarkers, {
+                    gridSize: 50,
+                    renderCluserMarker: _renderCluserMarker
+                });
+            });
+        } else if (tag == 1) {//自定义图标
+            let sts = [{
+                url: "http://a.amap.com/jsapi_demos/static/images/blue.png",
+                size: new AMap.Size(32, 32),
+                offset: new AMap.Pixel(-16, -16)
+            }, {
+                url: "http://a.amap.com/jsapi_demos/static/images/green.png",
+                size: new AMap.Size(32, 32),
+                offset: new AMap.Pixel(-16, -16)
+            }, {
+                url: "http://a.amap.com/jsapi_demos/static/images/orange.png",
+                size: new AMap.Size(36, 36),
+                offset: new AMap.Pixel(-18, -18)
+            }, {
+                url: "http://a.amap.com/jsapi_demos/static/images/red.png",
+                size: new AMap.Size(48, 48),
+                offset: new AMap.Pixel(-24, -24)
+            }, {
+                url: "http://a.amap.com/jsapi_demos/static/images/darkRed.png",
+                size: new AMap.Size(48, 48),
+                offset: new AMap.Pixel(-24, -24)
+            }];
+            this.map.plugin(["AMap.MarkerClusterer"], () => {
+                this.cluster = new AMap.MarkerClusterer(this.map, this.infoMarkers, {
+                    styles: sts,
+                    gridSize: 80
+                });
+            });
+        } else {//默认样式
+            this.map.plugin(["AMap.MarkerClusterer"], () => {
+                this.cluster = new AMap.MarkerClusterer(this.map, this.infoMarkers, { gridSize: 80 });
+            });
+        }
     }
 }

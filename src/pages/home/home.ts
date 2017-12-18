@@ -94,7 +94,20 @@ export class HomePage {
   displayCircle() {
     this.platform.ready().then(() => {
       this.mapService.showRegionalInfo().subscribe(() => {
-        console.log("draw circle");
+        console.log("draw circle and markers info success");
+      }, error => {
+        console.log(error);
+      });
+    });
+  }
+
+  /***
+   * 点聚合调整
+   */
+  clusterChange() {
+    this.platform.ready().then(() => {
+      this.mapService.addCluster().subscribe(() => {
+        console.log("cluster change success");
       }, error => {
         console.log(error);
       });

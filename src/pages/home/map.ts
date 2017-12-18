@@ -10,7 +10,7 @@ import { MapService } from './map.service';
 export class MapCtrl implements AfterViewInit {
     @Output() onMapReady = new EventEmitter();
     @Output() displayCircle = new EventEmitter();
-    // @Output() onCenterChanged = new EventEmitter();
+    //@Output() clusterChange = new EventEmitter();
     // @Output() onDragStart = new EventEmitter();
     @ViewChild('amap') mapCanvas: ElementRef;
     private map: any = null;
@@ -60,8 +60,12 @@ export class MapCtrl implements AfterViewInit {
             });
         });
 
-        // AMap.event.addListener(this.map, 'movestart', () => {
-          
+        // AMap.event.addListener(this.map, 'resize', () => {
+        //     console.log("地图缩放级别调整");
+
+        //     this.clusterChange.emit({
+        //         value: this.map
+        //     });
         // });
         
         // AMap.event.addListener(this.map, 'dragstart', () => {
