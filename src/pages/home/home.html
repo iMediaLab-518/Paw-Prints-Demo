@@ -1,9 +1,23 @@
 <ion-header>
   <ion-navbar>
+    <ion-buttons start>
     <button ion-button menuToggle>
-      <ion-icon name="menu"></ion-icon>
+      <ion-icon name="contact"></ion-icon>
     </button>
-    <ion-title>Paw Prints Demo</ion-title>
+    </ion-buttons>
+    <ion-segment>
+      <ion-segment-button value="find">
+        发现
+      </ion-segment-button>
+      <ion-segment-button value="circle">
+        圈子
+      </ion-segment-button>
+    </ion-segment>
+    <ion-buttons end>
+      <button ion-button icon-only>
+        <ion-icon name="search"></ion-icon>
+      </button>
+    </ion-buttons>
   </ion-navbar>
 </ion-header>
 
@@ -18,4 +32,20 @@
   </div>
   <!-- <div #map_container class="map_container"></div> -->
   <amap (onMapReady)="onMapReady()" (displayCircle)="displayCircle()"></amap>
+  <button ion-button secondary menuToggle>Toggle Menu</button>
+  <ion-fab right bottom>
+    <button ion-fab mini><ion-icon name="list"></ion-icon></button>
+    <button ion-fab mini><ion-icon name="add"></ion-icon></button>
+
+  </ion-fab>
+  <ion-fab left bottom>
+    <button ion-fab mini>
+      <ion-icon name="compass"></ion-icon>
+    </button>
+  </ion-fab>
+  <ion-fab center bottom>
+    <button ion-fab mini>
+      <ion-icon name="arrow-dropup"></ion-icon>
+    </button>
+  </ion-fab>
 </ion-content>

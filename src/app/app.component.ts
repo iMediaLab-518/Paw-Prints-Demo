@@ -15,16 +15,18 @@ export class MyApp {
 
   rootPage: any = HomePage;
 
-  pages: Array<{title: string, component: any}>;
+  pages: Array<{title: string, component: any,name:string}>;
 
   constructor(public platform: Platform, public statusBar: StatusBar, public splashScreen: SplashScreen) {
     this.initializeApp();
 
     // used for an example of ngFor and navigation
     this.pages = [
-      { title: 'Home', component: HomePage },
-      { title: 'List', component: ListPage },
-      { title: 'About', component: AboutPage }
+      { title: 'Home', component: HomePage,name:'返回首页' },
+      { title: 'List', component: ListPage, name:'我的圈子'},
+      { title: 'About', component: AboutPage,name:'个人收藏' },
+      { title:'',component: ListPage,name:'系统设置'},
+      { title:'',component: ListPage,name:'退出登录'}
     ];
 
   }

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { AlertController } from 'ionic-angular';
 import { Observable } from 'rxjs/Observable';
 import { Geolocation, Geoposition } from 'ionic-native';
+//import {Geolocation,Geoposition} from "@ionic-native/geolocation";
 import { MapConst } from './map.const';
 import { POINTS } from './../../app/points';
 
@@ -84,7 +85,7 @@ export class MapService {
                 console.log("loadMap success");
                 let map = new AMap.Map(mapEl, {
                     mapStyle: opts.mapStyle,
-                    view: new AMap.View2D({  //创建地图二维视口 
+                    view: new AMap.View2D({  //创建地图二维视口
                         resizeEnable: true,
                         zoom: opts.zoom
                     })
@@ -111,9 +112,10 @@ export class MapService {
             enableHighAccuracy: true,
             maximumAge
         };
-        return Geolocation.getCurrentPosition(options).then((pos: Geoposition) => {
-            return pos.coords;
-        });
+      return Geolocation.getCurrentPosition(options).then((pos:Geoposition)=>{
+          return pos.coords;
+      });
+
     }
 
     /***
@@ -229,7 +231,7 @@ export class MapService {
     //   public displayMapCenter():void {
     //     let center = new AMap.Lnglat({
     //         map: this.map
-    //       }); 
+    //       });
 
     //     center= this.map.getCenter();
     //     console.log(center);
