@@ -13,7 +13,7 @@ export class HomePage {
   loader: Loading;
   loader_locate: Loading;
   private localized: boolean = false;
-
+  pet:string="find";
   constructor(public navCtrl: NavController,
     protected alertCtrl: AlertController,
     private platform: Platform,
@@ -30,7 +30,7 @@ export class HomePage {
     console.log("onMapReady");
     const mapElement: Element = this.mapService.mapElement;
     mapElement.classList.add('show-map');
-    
+
     const loader_locate = this.loadingCtrl.create({
       content: "获取定位中...",
       spinner: "crescent",
@@ -38,7 +38,7 @@ export class HomePage {
     });
     this.loader_locate = loader_locate;
     loader_locate.present();
-    
+
     this.platform.ready().then(() => {
       this.locate().subscribe(() => {
         console.log("定位成功");
@@ -103,7 +103,7 @@ export class HomePage {
 
   /***
    * 按下‘+’按钮
-   * 
+   *
    */
   onClick1(): void {
     //存入全局配置信息
@@ -112,7 +112,7 @@ export class HomePage {
 
   /***
    * 按下‘-’按钮
-   * 
+   *
    */
   onClick2(): void {
     //取出全局配置信息
